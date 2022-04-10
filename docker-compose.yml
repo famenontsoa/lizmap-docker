@@ -34,6 +34,7 @@ services:
       QGSRV_LOGGING_LEVEL: DEBUG
       QGSRV_SERVER_WORKERS: ${QGIS_MAP_WORKERS}
       QGSRV_SERVER_PLUGINPATH: /srv/plugins
+      QGIS_SERVER_LIZMAP_REVEAL_SETTINGS: True
       PGSERVICEFILE: /srv/etc/pg_service.conf
       PGSPASSFILE: /srv/etc/pgpass.conf
       QGIS_OPTIONS_PATH: /srv/etc/qgis
@@ -41,8 +42,10 @@ services:
       - ${LIZMAP_PROJECTS}:/srv/projects
       - ${LIZMAP_DIR}/etc:/srv/etc:ro
       - ${LIZMAP_DIR}/wps-data:/srv/data
+      - ${LIZMAP_PLUGINS}:/srv/plugins
     ports:
       - ${OWS_PORT}:8080
+      - ${POSTGIS_PORT}:5433
     restart: unless-stopped
   redis:
     image: redis:5-alpine
@@ -66,12 +69,12 @@ services:
       - postgis_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - ${POSTGIS_PORT}:5432
-    networks:
-      default:
-        aliases:
-          - ${POSTGIS_ALIAS}
+    network_mode: service:map
+    command: -p 5433
+    # networks:
+    #  default:
+    #    aliases:
+    #     - ${POSTGIS_ALIAS}
     profiles:
       - postgis
 
@@ -80,4 +83,3 @@ volumes:
         driver: local
     redis_data:
         driver: local
-
